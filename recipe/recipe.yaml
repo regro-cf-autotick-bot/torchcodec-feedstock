@@ -2,7 +2,7 @@
 
 context:
   version: "0.14.0"
-  build_number: 1
+  build_number: 2
   torch_proc_type: ${{ "cuda" ~ cuda_compiler_version | version_to_buildstring if cuda_compiler_version != "None" else "cpu" }}
   # ensure arm_variant_type gets detected as a used variable
   touch_arm_variant_type: ${{ arm_variant_type | default("None") }}
@@ -15,6 +15,8 @@ source:
   - url: https://github.com/meta-pytorch/torchcodec/archive/refs/tags/v${{ version }}.tar.gz
     sha256: 340d85964f4865b16831b14923e3608866afbe6d5253b46a7c496bcdfb70bffa
     patches:
+      # Backport https://github.com/meta-pytorch/torchcodec/commit/a87fcd5570845b10b917ca1cd97b938fd68734a0
+      - ffmpeg9.patch
       - fix_third_party_interface_library_loading.patch
       - if: win
         then:

@@ -1,0 +1,155 @@
+From a87fcd5570845b10b917ca1cd97b938fd68734a0 Mon Sep 17 00:00:00 2001
+From: Nicolas Hug <contact@nicolas-hug.com>
+Date: Thu, 6 Aug 2026 14:55:44 +0100
+Subject: [PATCH] Build against FFmpeg 9 (#1607)
+
+
+diff --git a/src/torchcodec/_core/CMakeLists.txt b/src/torchcodec/_core/CMakeLists.txt
+index 8f48143..1bcb5f8 100644
+--- a/src/torchcodec/_core/CMakeLists.txt
++++ b/src/torchcodec/_core/CMakeLists.txt
+@@ -711,11 +711,12 @@ if(DEFINED ENV{BUILD_AGAINST_ALL_FFMPEG_FROM_S3})
+         you still need a different FFmpeg to be installed for run time!"
+     )
+ 
+-    # This will expose the torchcodec::ffmpeg{N} (N=4,5,6,7,8) targets
++    # This will expose the torchcodec::ffmpeg{N} (N=4,5,6,7,8,9) targets
+     include(
+         ${CMAKE_CURRENT_SOURCE_DIR}/fetch_and_expose_non_gpl_ffmpeg_libs.cmake
+     )
+ 
++    make_torchcodec_libraries(9 torchcodec::ffmpeg9)
+     make_torchcodec_libraries(8 torchcodec::ffmpeg8)
+     make_torchcodec_libraries(7 torchcodec::ffmpeg7)
+     make_torchcodec_libraries(6 torchcodec::ffmpeg6)
+diff --git a/src/torchcodec/_core/fetch_and_expose_non_gpl_ffmpeg_libs.cmake b/src/torchcodec/_core/fetch_and_expose_non_gpl_ffmpeg_libs.cmake
+index b2f5cb0..af9df33 100644
+--- a/src/torchcodec/_core/fetch_and_expose_non_gpl_ffmpeg_libs.cmake
++++ b/src/torchcodec/_core/fetch_and_expose_non_gpl_ffmpeg_libs.cmake
+@@ -41,6 +41,10 @@ if (LINUX)
+             f8_sha256
+             b9cfd99ae75a14e58300854967d4dc49de0b3daa551df51ea1f52a3f08d2c8af
+         )
++        set(
++            f9_sha256
++            e68d3a5a17705740f0f8cf69a92ab65ae47c9e17eb3969b17966bd11ab12b382
++        )
+     elseif (LINUX)  # assume x86_64
+         set(
+             platform_url
+@@ -67,6 +71,10 @@ if (LINUX)
+             f8_sha256
+             c55b3c1a4b5e4d5fdd7c632bea3ab6f45b4e37cc8e0999dda3f84a8ed8defad8
+         )
++        set(
++            f9_sha256
++            ac033158731d452858f3248f93e51939547e87e3dda4fc0e1dc08ae9087d5a35
++        )
+   endif()
+ elseif (APPLE)
+     set(
+@@ -93,6 +101,10 @@ elseif (APPLE)
+         f8_sha256
+         beb936b76f25d2621228a12cdb67c9ae3d1eff7aa713ef8d1167ebf0c25bd5ec
+     )
++    set(
++        f9_sha256
++        2cd1114e5139aee070959121e0a03cc40d2f0cb771b4a3ecfa28195176e3fa73
++    )
+ elseif (WIN32)
+     set(
+         platform_url
+@@ -118,6 +130,10 @@ elseif (WIN32)
+         f8_sha256
+         bac845ac79876b104959cb0e7b9dec772a261116344dd17d2f97e7ddfac4a73f
+     )
++    set(
++        f9_sha256
++        228b9f9123ac07e7ca38907e75b0f4b0d97273787c98fad922b0775fe17b86f1
++    )
+ else()
+     message(
+         FATAL_ERROR
+@@ -155,8 +171,14 @@ FetchContent_Declare(
+     URL_HASH
+     SHA256=${f8_sha256}
+ )
++FetchContent_Declare(
++    f9
++    URL ${platform_url}/9.0.tar.gz
++    URL_HASH
++    SHA256=${f9_sha256}
++)
+ 
+-FetchContent_MakeAvailable(f4 f5 f6 f7 f8)
++FetchContent_MakeAvailable(f4 f5 f6 f7 f8 f9)
+ 
+ # makes add_ffmpeg_target available
+ include("${CMAKE_CURRENT_SOURCE_DIR}/../share/cmake/TorchCodec/ffmpeg_versions.cmake")
+@@ -167,3 +189,4 @@ add_ffmpeg_target(5 "${f5_SOURCE_DIR}")
+ add_ffmpeg_target(6 "${f6_SOURCE_DIR}")
+ add_ffmpeg_target(7 "${f7_SOURCE_DIR}")
+ add_ffmpeg_target(8 "${f8_SOURCE_DIR}")
++add_ffmpeg_target(9 "${f9_SOURCE_DIR}")
+diff --git a/src/torchcodec/_internally_replaced_utils.py b/src/torchcodec/_internally_replaced_utils.py
+index d170ec6..b5dde8d 100644
+--- a/src/torchcodec/_internally_replaced_utils.py
++++ b/src/torchcodec/_internally_replaced_utils.py
+@@ -124,7 +124,7 @@ def load_core_libraries() -> tuple[int, str]:
+     with PyTorch's runtime so they're accessible through torch.ops.
+     """
+     exceptions = []
+-    for ffmpeg_major_version in (8, 7, 6, 5, 4):
++    for ffmpeg_major_version in (9, 8, 7, 6, 5, 4):
+         core_library_name = f"libtorchcodec_core{ffmpeg_major_version}"
+         custom_ops_library_name = f"libtorchcodec_custom_ops{ffmpeg_major_version}"
+         try:
+@@ -145,7 +145,7 @@ def load_core_libraries() -> tuple[int, str]:
+     raise RuntimeError(
+         f"""Could not load libtorchcodec. Likely causes:
+           1. FFmpeg is not properly installed in your environment. We support
+-             versions 4, 5, 6, 7, and 8, and we attempt to load libtorchcodec
++             versions 4, 5, 6, 7, 8, and 9, and we attempt to load libtorchcodec
+              for each of those versions. Errors for versions not installed on
+              your system are expected; only the error for your installed FFmpeg
+              version is relevant. On Windows, ensure you've installed the
+diff --git a/src/torchcodec/share/cmake/TorchCodec/ffmpeg_versions.cmake b/src/torchcodec/share/cmake/TorchCodec/ffmpeg_versions.cmake
+index 5f4ea87..7029877 100644
+--- a/src/torchcodec/share/cmake/TorchCodec/ffmpeg_versions.cmake
++++ b/src/torchcodec/share/cmake/TorchCodec/ffmpeg_versions.cmake
+@@ -3,7 +3,7 @@
+ 
+ # List of FFmpeg versions that TorchCodec can support - that's not a list of
+ # FFmpeg versions available on the current system!
+-set(TORCHCODEC_SUPPORTED_FFMPEG_VERSIONS "4;5;6;7;8")
++set(TORCHCODEC_SUPPORTED_FFMPEG_VERSIONS "4;5;6;7;8;9")
+ 
+ # Create and expose torchcodec::ffmpeg${ffmpeg_major_version} target which can
+ # then be used as a dependency in other targets.
+@@ -32,6 +32,8 @@ function(add_ffmpeg_target ffmpeg_major_version prefix)
+             set(library_file_names libavutil.so.59 libavcodec.so.61 libavformat.so.61 libavdevice.so.61 libavfilter.so.10 libswscale.so.8 libswresample.so.5)
+         elseif (ffmpeg_major_version EQUAL 8)
+             set(library_file_names libavutil.so.60 libavcodec.so.62 libavformat.so.62 libavdevice.so.62 libavfilter.so.11 libswscale.so.9 libswresample.so.6)
++        elseif (ffmpeg_major_version EQUAL 9)
++            set(library_file_names libavutil.so.61 libavcodec.so.63 libavformat.so.63 libavdevice.so.63 libavfilter.so.12 libswscale.so.10 libswresample.so.7)
+         endif()
+     elseif (APPLE)
+         if (ffmpeg_major_version EQUAL 4)
+@@ -44,6 +46,8 @@ function(add_ffmpeg_target ffmpeg_major_version prefix)
+             set(library_file_names libavutil.59.dylib libavcodec.61.dylib libavformat.61.dylib libavdevice.61.dylib libavfilter.10.dylib libswscale.8.dylib libswresample.5.dylib)
+         elseif (ffmpeg_major_version EQUAL 8)
+             set(library_file_names libavutil.60.dylib libavcodec.62.dylib libavformat.62.dylib libavdevice.62.dylib libavfilter.11.dylib libswscale.9.dylib libswresample.6.dylib)
++        elseif (ffmpeg_major_version EQUAL 9)
++            set(library_file_names libavutil.61.dylib libavcodec.63.dylib libavformat.63.dylib libavdevice.63.dylib libavfilter.12.dylib libswscale.10.dylib libswresample.7.dylib)
+         endif()
+     elseif (WIN32)
+         set(library_file_names avutil.lib avcodec.lib avformat.lib avdevice.lib avfilter.lib swscale.lib swresample.lib)
+@@ -112,6 +116,8 @@ function(add_ffmpeg_target_with_pkg_config ret_ffmpeg_major_version_var)
+         set(ffmpeg_major_version "7")
+     elseif (${libavcodec_major_version} STREQUAL "62")
+         set(ffmpeg_major_version "8")
++    elseif (${libavcodec_major_version} STREQUAL "63")
++        set(ffmpeg_major_version "9")
+     else()
+         message(FATAL_ERROR "Unsupported libavcodec version: ${libavcodec_major_version}")
+     endif()
