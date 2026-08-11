@@ -13,7 +13,7 @@ cuda_compiler_version:
 cxx_compiler:
 - vs2022
 ffmpeg:
-- '8'
+- '9'
 libmagma_devel:
 - 2.10.0
 libtorch:

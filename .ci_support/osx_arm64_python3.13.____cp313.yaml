@@ -21,7 +21,7 @@ cxx_compiler:
 cxx_compiler_version:
 - '19'
 ffmpeg:
-- '8'
+- '9'
 libtorch:
 - '2.13'
 macos_machine:
