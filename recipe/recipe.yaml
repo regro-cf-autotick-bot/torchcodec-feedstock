@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/prefix-dev/recipe-format/main/schema.json
 
 context:
-  version: "0.15.0"
+  version: "0.16.0"
   build_number: 0
   torch_proc_type: ${{ "cuda" ~ cuda_compiler_version | version_to_buildstring if cuda_compiler_version != "None" else "cpu" }}
   # ensure arm_variant_type gets detected as a used variable
@@ -13,7 +13,7 @@ recipe:
 
 source:
   - url: https://github.com/meta-pytorch/torchcodec/archive/refs/tags/v${{ version }}.tar.gz
-    sha256: 9b96460b95f1d2ab61e2f885189b694f4e67a95ba8d12599859b83afdfa5b2d0
+    sha256: b10068c6c52205bc10bec0bba350079b34ecc1880727e89fc8a13951d59c7bf1
     patches:
       # Backport https://github.com/meta-pytorch/torchcodec/commit/a87fcd5570845b10b917ca1cd97b938fd68734a0
       - ffmpeg9.patch
