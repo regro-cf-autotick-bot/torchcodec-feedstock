@@ -4,22 +4,22 @@ Date: Tue, 9 Sep 2025 08:54:27 +0200
 Subject: [PATCH] Add workaround for conda-forge pkg-config issue
 
 Added a workaround for conda-forge pkg-config issue.
----
- CMakeLists.txt | 3 +++
- 1 file changed, 3 insertions(+)
 
+Refreshed for 0.16.0, which grew a find_package(Python3) call of its own right
+after project(); the overrides have to be set before it runs.
+---
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0f2d0de2d..64af5c24b 100644
+index 384cb22..a5207d1 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,6 +1,9 @@
+@@ -1,6 +1,10 @@
  cmake_minimum_required(VERSION 3.18)
  project(TorchCodec)
  
 +set(PYTHON_EXECUTABLE $ENV{PYTHON})
 +set(Python_EXECUTABLE $ENV{PYTHON})
 +set(Python3_EXECUTABLE $ENV{PYTHON})
- add_subdirectory(src/torchcodec/_core)
- 
- 
-
++
+ # Define LINUX platform variable globally
+ if (UNIX AND NOT APPLE)
+     set(LINUX TRUE)

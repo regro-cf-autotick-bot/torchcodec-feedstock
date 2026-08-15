@@ -1,5 +1,9 @@
 set -ex
 
+# Otherwise torchcodec's scikit-build-core version provider appends the sha of
+# whatever git repository happens to contain the work directory
+export BUILD_VERSION="${PKG_VERSION}"
+
 if [[ ${cuda_compiler_version} != "None" ]]; then
    export ENABLE_CUDA=1
 else
@@ -20,6 +24,10 @@ export TORCHCODEC_DISABLE_HOMEBREW_RPATH=ON
 
 # Use Ninja generator for consistency with Windows
 export CMAKE_GENERATOR=Ninja
+
+# use_conda_forge_giflib.patch builds against conda-forge's giflib, so drop the
+# vendored copy rather than shipping a second one inside site-packages
+rm -rf src/torchcodec/_core/giflib
 
 pip install . --no-deps --no-build-isolation -vv
 
