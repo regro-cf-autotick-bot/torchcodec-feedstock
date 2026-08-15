@@ -17,6 +17,7 @@ source:
     patches:
       - fix_third_party_interface_library_loading.patch
       - use_conda_forge_libavif.patch
+      - use_conda_forge_giflib.patch
       - if: win
         then:
           - use_correct_python_on_windows.patch
@@ -93,6 +94,7 @@ outputs:
         - zlib
         - libwebp-base
         - libavif
+        - giflib
         - libheif * [build=lgpl_*]
         - if: cuda_compiler_version != "None"
           then:

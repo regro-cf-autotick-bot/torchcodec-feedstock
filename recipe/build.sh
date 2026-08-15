@@ -25,6 +25,10 @@ export TORCHCODEC_DISABLE_HOMEBREW_RPATH=ON
 # Use Ninja generator for consistency with Windows
 export CMAKE_GENERATOR=Ninja
 
+# use_conda_forge_giflib.patch builds against conda-forge's giflib, so drop the
+# vendored copy rather than shipping a second one inside site-packages
+rm -rf src/torchcodec/_core/giflib
+
 pip install . --no-deps --no-build-isolation -vv
 
 # Remove spurious files created by gtk post-link activation script,

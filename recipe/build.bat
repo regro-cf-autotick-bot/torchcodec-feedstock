@@ -23,5 +23,10 @@ set "CMAKE_GENERATOR=Ninja"
 set "CMAKE_GENERATOR_PLATFORM="
 set "CMAKE_GENERATOR_TOOLSET="
 
+:: use_conda_forge_giflib.patch builds against conda-forge's giflib, so drop the
+:: vendored copy rather than shipping a second one inside site-packages
+rmdir /s /q src\torchcodec\_core\giflib
+if %ERRORLEVEL% neq 0 exit 1
+
 pip install . --no-deps --no-build-isolation -vv
 if %ERRORLEVEL% neq 0 exit 1
