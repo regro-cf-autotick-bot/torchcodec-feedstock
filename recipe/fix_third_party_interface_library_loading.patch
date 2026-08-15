@@ -1,8 +1,16 @@
+Load the built third-party test library by absolute path, with the running
+interpreter.
+
+The upstream test loads "torchcodec_third_party_interface_test<ver>.so" by bare
+name via a hardcoded "python3", which fails in conda-forge test environments:
+the built library lands in a generator-dependent subdirectory of the build tree,
+and "python3" may not be the interpreter under test (and does not exist at all
+on Windows).
 diff --git a/test/third-party-interface/test_third_party_interface.py b/test/third-party-interface/test_third_party_interface.py
-index bc6b5ea..0000000 100644
+index bc6b5ea..ccc060d 100644
 --- a/test/third-party-interface/test_third_party_interface.py
 +++ b/test/third-party-interface/test_third_party_interface.py
-@@ -13,6 +13,7 @@ This test ensures that such third-party extensions can be built correctly.
+@@ -11,6 +11,7 @@ This test ensures that such third-party extensions can be built correctly.
  
  import os
  import subprocess
@@ -10,7 +18,7 @@ index bc6b5ea..0000000 100644
  
  from pathlib import Path
  
-@@ -20,6 +21,26 @@ import torch
+@@ -18,6 +19,30 @@ import torch
  import torchcodec
  
  
@@ -39,7 +47,9 @@ index bc6b5ea..0000000 100644
 +
 +
  def test_third_party_interface_pkgconfig(tmp_path):
-@@ -38,17 +59,8 @@ def test_third_party_interface_pkgconfig(tmp_path):
+     # Test building of third-party-interface. Since
+     # TORCHCODEC_FFMPEG{ver}_INSTALL_PREFIX is not provided, FFmpeg should be
+@@ -35,16 +60,8 @@ def test_third_party_interface_pkgconfig(tmp_path):
      result = subprocess.run(["cmake", "--build", "."], cwd=tmp_path)
      assert result.returncode == 0
  
@@ -58,7 +68,7 @@ index bc6b5ea..0000000 100644
      assert result.returncode == 0
  
  
-@@ -103,17 +115,8 @@ def test_third_party_interface_with_prefix(tmp_path):
+@@ -101,14 +118,6 @@ def test_third_party_interface_with_prefix(tmp_path):
      result = subprocess.run(["cmake", "--build", "."], cwd=tmp_path)
      assert result.returncode == 0
  

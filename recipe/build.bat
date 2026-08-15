@@ -1,3 +1,7 @@
+:: Otherwise torchcodec's scikit-build-core version provider appends the sha of
+:: whatever git repository happens to contain the work directory
+set BUILD_VERSION=%PKG_VERSION%
+
 if not "%cuda_compiler_version%" == "None" (
     set ENABLE_CUDA=1
 ) else (

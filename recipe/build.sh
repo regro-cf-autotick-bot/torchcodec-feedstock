@@ -1,5 +1,9 @@
 set -ex
 
+# Otherwise torchcodec's scikit-build-core version provider appends the sha of
+# whatever git repository happens to contain the work directory
+export BUILD_VERSION="${PKG_VERSION}"
+
 if [[ ${cuda_compiler_version} != "None" ]]; then
    export ENABLE_CUDA=1
 else

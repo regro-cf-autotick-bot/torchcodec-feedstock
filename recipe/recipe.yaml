@@ -15,9 +15,8 @@ source:
   - url: https://github.com/meta-pytorch/torchcodec/archive/refs/tags/v${{ version }}.tar.gz
     sha256: b10068c6c52205bc10bec0bba350079b34ecc1880727e89fc8a13951d59c7bf1
     patches:
-      # Backport https://github.com/meta-pytorch/torchcodec/commit/a87fcd5570845b10b917ca1cd97b938fd68734a0
-      - ffmpeg9.patch
       - fix_third_party_interface_library_loading.patch
+      - use_conda_forge_libavif.patch
       - if: win
         then:
           - use_correct_python_on_windows.patch
@@ -71,7 +70,7 @@ outputs:
       host:
         - python
         - pip
-        - setuptools
+        - scikit-build-core
         - ffmpeg
         # During the build, we link against the lgpl version of ffmpeg, to avoid license violation (and so we pass
         # I_CONFIRM_THIS_IS_NOT_A_LICENSE_VIOLATION to the wheel build to confirm that we want indeed to link to conda-forge's
@@ -89,6 +88,12 @@ outputs:
             - libtorch * [build=${{ torch_proc_type }}*]
             - pytorch * [build=${{ torch_proc_type }}*]
         - pybind11
+        - libjpeg-turbo
+        - libpng
+        - zlib
+        - libwebp-base
+        - libavif
+        - libheif * [build=lgpl_*]
         - if: cuda_compiler_version != "None"
           then:
             # These are dev packages (headers etc.) for transitive dependencies of libtorch
@@ -111,6 +116,7 @@ outputs:
             - nvtx-c
             # These are actual torchcodec deps
             - libnpp-dev
+            - libnvjpeg-dev
       run:
         - python
         # We temporary relatex the pytorch dependency on to be compatible with torchvision,
@@ -188,12 +194,29 @@ outputs:
                       "test/test_decoders.py",
                   ]
                   pytest_extra_args += ["--durations=50"]
-            - if: ffmpeg == "9"
-              then:
-                # FFmpeg 9 may choose different FLAC frame boundaries than TorchCodec
-                # for the same samples. The encoded audio is equivalent, but this test
-                # incorrectly requires identical per-frame segmentation.
-                - tests_to_skip += ["test/test_encoders.py::TestEncoder::test_audio_against_cli"]
+            # conda-forge's pillow is not built against libavif, so the tests that use
+            # PIL as the reference AVIF implementation cannot run. The remaining AVIF
+            # tests, which do not need PIL, still cover our decoder.
+            - |
+              tests_to_skip += [
+                  "test/test_decoders.py::TestImageDecoder::test_avif_against_pil",
+                  "test/test_decoders.py::TestImageDecoder::test_animated_avif",
+                  "test/test_decoders.py::TestImageDecoder::test_output_dtype_high_bit_depth_avif",
+              ]
+              tests_to_skip += [
+                  f"test/test_decoders.py::TestImageDecoder::test_exif_orientation[{orientation}-avif]"
+                  for orientation in range(9)
+              ]
+              tests_to_skip += [
+                  f"test/test_decoders.py::TestImageDecoder::test_all_source_to_all_output_modes[{mode}-avif]"
+                  for mode in (
+                      "UNCHANGED-None-None",
+                      "GRAY-L-1",
+                      "GRAY_ALPHA-LA-2",
+                      "RGB-RGB-3",
+                      "RGB_ALPHA-RGBA-4",
+                  )
+              ]
             - if: target_platform == "osx-64"
               then:
                 # osx-64 (macOS on Intel) is not explicitly supported by torchcodec, see
