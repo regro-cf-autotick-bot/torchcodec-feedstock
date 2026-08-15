@@ -248,6 +248,7 @@ about:
 
 extra:
   recipe-maintainers:
+    - ruben-arts
     - traversaro
     - Dan-Flores
   feedstock-name: torchcodec
